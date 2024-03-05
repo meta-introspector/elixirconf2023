@@ -1,16 +1,18 @@
 defmodule Example do
   @moduledoc false
 
-  def test() do
-    repo = {:hf, "mistralai/Mistral-7B-Instruct-v0.2"}
-    
-    {:ok, model_info} = Bumblebee.load_model(repo, type: :bf16, backend: EXLA.Backend)
+  def test(name) do
+    repo = {:hf,name} 
+    cache_dir = "/tmp/bumblebee_cache"	
+    {:ok, model_info} = Bumblebee.load_model(repo,
+    cache_dir: cache_dir,
+    backend: EXLA.Backend)
     {:ok, tokenizer} = Bumblebee.load_tokenizer(repo)
-    {:ok, generation_config} = Bumblebee.load_generation_config(repo)
+    {:ok, generation_config} = Bumblebee.load_generation_config(repo,     cache_dir: cache_dir)
     
     generation_config =
       Bumblebee.configure(generation_config,
-	max_new_tokens: 256,
+	max_new_tokens: 256,	architecture: :for_causal_language_modeling,
 	strategy: %{type: :multinomial_sampling, top_p: 0.6}
       )
 
@@ -26,7 +28,7 @@ defmodule Example do
 
     text = "Hello how are you?"
     Nx.Serving.run(serving, text)
-#    Nx.Serving.batched_run(Mistral, prompt) |> Enum.each(&IO.write/1)    
+    Nx.Serving.batched_run(serving,text) |> Enum.each(&IO.write/1)    
   end
 
 end
